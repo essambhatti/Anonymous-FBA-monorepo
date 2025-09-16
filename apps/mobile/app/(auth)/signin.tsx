@@ -1,25 +1,22 @@
-import React, { useState } from "react"
-import { View, Pressable } from "react-native"
-import { useForm, Controller } from "react-hook-form"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import {  Input } from "@/components/ui/input" 
-import {  Card } from "@/components/ui/card" 
-import { Text } from "@/components/ui/text"
-import { login } from "@/lib/login"
-import { useRouter } from "expo-router"
+import React, { useState } from "react";
+import { View, Pressable } from "react-native";
+import { useForm, Controller } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Text } from "@/components/ui/text";
+import { login } from "@/lib/login";
+import { Link, useRouter } from "expo-router";
+import { signInSchema } from "../../../../apps/web/src/schemas/signinSchema";
+import { Button } from "@/components/ui/button";
+import { logout } from "@/lib/logout";
 
-// Schema
-const signInSchema = z.object({
-  identifier: z.string().min(1, "Email/Username is required"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-})
-
-type SignInForm = z.infer<typeof signInSchema>
+type SignInForm = z.infer<typeof signInSchema>;
 
 export default function SignInScreen() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
   const {
     control,
     handleSubmit,
@@ -27,24 +24,34 @@ export default function SignInScreen() {
   } = useForm<SignInForm>({
     resolver: zodResolver(signInSchema),
     defaultValues: { identifier: "", password: "" },
-  })
+  });
 
- const onSubmit = async (values : any) => {
-  try {
-    const result = await login(values.identifier, values.password)
-    console.log("Logged in:", result)
-    // Navigate to dashboard
-    router.replace("/(protected)/(tabs)/dashboard")
-  } catch (err: any ) {
-    console.error("Login failed:", err.message)
-  }
-}
+  const onSubmit = async (values: any) => {
+    try {
+      const result = await login(values.identifier, values.password);
+      console.log("Logged in:", result);
+      // Navigate to dashboard
+      router.replace("/(protected)/(tabs)/dashboard");
+    } catch (err: any) {
+      console.error("Login failed:", err.message);
+    }
+  };
 
+  const handleLogout = async () => {
+    try {
+      const result = await logout();
+      router.replace("/(auth)/signup");
+    } catch (err: any) {
+      console.error("Logout Failed", err.message);
+    }
+  };
 
   return (
     <View className="flex-1 bg-black items-center justify-center p-6">
       <Card className="w-full max-w-md p-6 bg-gray-900/70 border border-cyan-500/30 rounded-2xl">
-        <Text className="text-3xl font-bold text-white text-center ">Welcome Back</Text>
+        <Text className="text-3xl font-bold text-white text-center ">
+          Welcome Back
+        </Text>
 
         {/* Identifier Field */}
         <Controller
@@ -52,7 +59,9 @@ export default function SignInScreen() {
           name="identifier"
           render={({ field: { onChange, value, onBlur } }) => (
             <View className="flex-col gap-2">
-               <Text className="text-white text-md font-medium">Email/Username</Text>
+              <Text className="text-white text-md font-medium">
+                Email/Username
+              </Text>
 
               <Input
                 label="Email/Username"
@@ -64,7 +73,11 @@ export default function SignInScreen() {
                 className="bg-gray-800 text-white border-cyan-500 text-sm"
                 keyboardType="email-address"
               />
-              {errors.identifier && <Text className="text-red-400 mt-1">{errors.identifier.message}</Text>}
+              {errors.identifier && (
+                <Text className="text-red-400 mt-1">
+                  {errors.identifier.message}
+                </Text>
+              )}
             </View>
           )}
         />
@@ -75,7 +88,7 @@ export default function SignInScreen() {
           name="password"
           render={({ field: { onChange, value, onBlur } }) => (
             <View className="flex-col gap-2">
-                <Text className="text-white text-md font-medium">Password</Text>
+              <Text className="text-white text-md font-medium">Password</Text>
 
               <Input
                 label="Password"
@@ -88,20 +101,35 @@ export default function SignInScreen() {
                 className="bg-gray-800 text-white border-cyan-500 text-sm"
                 keyboardType="default"
               />
-              {errors.password && <Text className="text-red-400 mt-1">{errors.password.message}</Text>}
+              {errors.password && (
+                <Text className="text-red-400 mt-1">
+                  {errors.password.message}
+                </Text>
+              )}
             </View>
           )}
         />
 
         {/* Submit Button */}
         <Pressable
-        className=" bg-blue-500 w-full rounded-md p-2"
-           onPress={handleSubmit(onSubmit)}
+          className=" bg-blue-500 w-full rounded-md p-2"
+          onPress={handleSubmit(onSubmit)}
           disabled={isSubmitting}
         >
           <Text className="text-white text-center text-md">Sign In</Text>
         </Pressable>
+        <View className="flex flex-row items-center justify-center gap-2">
+          <Text className="text-muted-foreground text-sm text-center">
+            Dont have an Account?
+          </Text>
+          <Link href="/signup">
+            <Text className="text-sm text-center underline text-blue-500">Sign Up</Text>
+          </Link>
+        </View>
       </Card>
+      <Button onPress={() => handleLogout}>
+        <Text>Sign Out</Text>
+      </Button>
     </View>
-  )
+  );
 }

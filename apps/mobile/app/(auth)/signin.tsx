@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import {  Input } from "@/components/ui/input" 
 import {  Card } from "@/components/ui/card" 
 import { Text } from "@/components/ui/text"
+import { login } from "@/lib/login"
+import { useRouter } from "expo-router"
 
 // Schema
 const signInSchema = z.object({
@@ -17,7 +19,7 @@ type SignInForm = z.infer<typeof signInSchema>
 
 export default function SignInScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false)
-
+  const router = useRouter()
   const {
     control,
     handleSubmit,
@@ -27,15 +29,17 @@ export default function SignInScreen() {
     defaultValues: { identifier: "", password: "" },
   })
 
-  const onSubmit = async (data: SignInForm) => {
-    setIsSubmitting(true)
-    console.log("Form Data:", data)
-
-    // 🔹 Replace with your API call to Next.js backend
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    setIsSubmitting(false)
+ const onSubmit = async (values : any) => {
+  try {
+    const result = await login(values.identifier, values.password)
+    console.log("Logged in:", result)
+    // Navigate to dashboard
+    router.replace("/(protected)/(tabs)/dashboard")
+  } catch (err: any ) {
+    console.error("Login failed:", err.message)
   }
+}
+
 
   return (
     <View className="flex-1 bg-black items-center justify-center p-6">
@@ -58,6 +62,7 @@ export default function SignInScreen() {
                 placeholder="Enter your email or username"
                 error={errors.identifier?.message}
                 className="bg-gray-800 text-white border-cyan-500 text-sm"
+                keyboardType="email-address"
               />
               {errors.identifier && <Text className="text-red-400 mt-1">{errors.identifier.message}</Text>}
             </View>
@@ -81,6 +86,7 @@ export default function SignInScreen() {
                 secureTextEntry
                 error={errors.password?.message}
                 className="bg-gray-800 text-white border-cyan-500 text-sm"
+                keyboardType="default"
               />
               {errors.password && <Text className="text-red-400 mt-1">{errors.password.message}</Text>}
             </View>

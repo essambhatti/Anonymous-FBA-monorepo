@@ -1,17 +1,23 @@
-import { View, Text } from 'react-native'
-import React from 'react'
-import { Redirect } from 'expo-router'
+import { Slot, useRouter } from "expo-router"
+import { ActivityIndicator, View } from "react-native"
+import { useAuth } from "../../context/AuthContext"
 
-const Layout = () => {
-  const isAuth = false
-  if (!isAuth) {
-    return <Redirect href="/(auth)/signin"/>
+export default function ProtectedLayout() {
+  const { authenticated, loading } = useAuth()
+  const router = useRouter()
+
+  if (loading) {
+    return (
+      <View className="flex-1 items-center justify-center bg-black">
+        <ActivityIndicator size="large" color="#0ea5e9" />
+      </View>
+    )
   }
-  return (
-    <View>
-      <Text>Layout</Text>
-    </View>
-  )
-}
 
-export default Layout
+  if (!authenticated) {
+    router.replace("/signin")
+    return null
+  }
+
+  return <Slot />
+}
